@@ -52,12 +52,13 @@ def tfidf(doc, idf, word2id):
 		ret[word2id[v]] += idf[word2id[v]]/len(doc)
 	return ret
 
+
 def save(d, fname):
 	fout = open(fname, 'w')
 	print(json.dumps(d, ensure_ascii = False), file = fout)
 	fout.close()
 
-def load():
+def load_tfidf():
 	fin = open('idf.txt', 'r')
 	idf = json.loads(fin.read())
 	fin.close()
@@ -67,11 +68,25 @@ def load():
 	return idf, word2id
 
 
+def cooccurence(corpus, word2id):
+	word_vecs = np.zeros((len(word2id), len(word2id)))
+	for doc in corpus:
+		words = set(doc)
+		for w1 in words:
+			for w2 in words:
+				word_vecs[word2id[w1]][word2id[w2]] += 1
+	for i in range(len(word2id)):
+		word_vecs[i][i] = 0
+	return word_vecs
+
+
+
 if __name__ == '__main__':
 	corpus = read_all_doc()
 	idf, word2id = cal_idf(corpus)
 	save(idf, 'idf.txt')
 	save(word2id, 'word2id.txt')
-
+	word_vecs = cooccurence(corpus, word2id)
+	np.save('word_vecs.npy', word_vecs)
 
 
