@@ -20,9 +20,8 @@ def read_all_doc():
 	inpath = '../../hw1/nyt_corp0/'
 
 	corpus = []
-	files = os.listdir(inpath)
-	for f in files:
-		fin = open(os.path.join(inpath, f), 'r')
+	for i in range(300):
+		fin = open(os.path.join(inpath, str(i)), 'r')
 		corpus.append(to_word_list(fin.read()))
 
 	return corpus
@@ -45,27 +44,16 @@ def cal_idf(corpus):
 	return idf, word2id
 
 
-def tfidf(doc, idf, word2id):
-	doc = to_word_list(doc)
-	ret = numpy.zeros(len(word2id))
-	for v in doc:
-		ret[word2id[v]] += idf[word2id[v]]/len(doc)
+def tfidf(corpus, idf, word2id):
+	ret = []
+	for doc in corpus:
+		tmp = np.zeros(len(word2id))
+		for v in doc:
+			tmp[word2id[v]] += idf[word2id[v]]/len(doc)
+		ret.append(tmp)
+	ret = np.vstack(ret)
 	return ret
 
-
-def save(d, fname):
-	fout = open(fname, 'w')
-	print(json.dumps(d, ensure_ascii = False), file = fout)
-	fout.close()
-
-def load_tfidf():
-	fin = open('idf.txt', 'r')
-	idf = json.loads(fin.read())
-	fin.close()
-	fin = open('word2id.txt', 'r')
-	word2id = json.loads(fin.read())
-	fin.close()
-	return idf, word2id
 
 
 def cooccurence(corpus, word2id):
@@ -80,13 +68,65 @@ def cooccurence(corpus, word2id):
 	return word_vecs
 
 
+def save(d, fname):
+	fout = open(fname, 'w')
+	print(json.dumps(d, ensure_ascii = False), file = fout)
+	fout.close()
+
+
+def load_tfidf():
+	fin = open('idf.txt', 'r')
+	idf = json.loads(fin.read())
+	fin.close()
+	fin = open('word2id.txt', 'r')
+	word2id = json.loads(fin.read())
+	fin.close()
+	return idf, word2id
+
+
+def cosine_similar(vec, all_vec):
+	# vec.shape: vec_length
+	# all_vec.shape: num, vec_length
+	norm = np.linalg.norm(all_vec, axis = 1)
+	dot = np.matmul(vec, all_vec.transpose(1, 0))
+	dot = dot / np.linalg.norm(vec)
+	dot = dot / np.linalg.norm(all_vec, axis = 1)
+
+	argsort = np.argsort(dot)
+	argsort = argsort[::-1]
+	return argsort[1:6] # 去除本身
+
+def distance_similar(vec, all_vec):
+	distance = all_vec - vec
+	distance = np.linalg.norm(distance, axis = 1)
+	argsort = np.argsort(distance)
+	return argsort[1:6] #去除本身
+
+
+import random
 
 if __name__ == '__main__':
+	# 统计所有数据
 	corpus = read_all_doc()
 	idf, word2id = cal_idf(corpus)
 	save(idf, 'idf.txt')
 	save(word2id, 'word2id.txt')
 	word_vecs = cooccurence(corpus, word2id)
 	np.save('word_vecs.npy', word_vecs)
+	docs = tfidf(corpus, idf, word2id)
 
+	# 随机一篇文档，并求余弦相似与欧氏距离相似的各5篇
+	index = random.randint(0, len(corpus))
+	doc = docs[index]
+	print('选择文档:', index)
+	print('余弦相似度:', cosine_similar(doc, docs))
+	print('欧氏距离短:', distance_similar(doc, docs))
+
+	# 随机一个单词，并求余弦相似与欧氏距离相似的各5个词语
+	word = 'money'
+	index = word2id[word]
+	word_vec = word_vecs[index]
+	print('选择词语:', word)
+	print('余弦相似度:', cosine_similar(word_vec, word_vecs))
+	print('欧氏距离短:', distance_similar(word_vec, word_vecs))
 
