@@ -6,10 +6,10 @@ library('wordcloud')
 library('RColorBrewer')
 library('ggplot2')
 
+# (1) 解析xml文档，并建立数据框对象
 dir_path = '../../HW2/nyt_corpus/samples_500/'
 filenames = list.files(path = dir_path)
 
-# (1)
 news_data = data.frame()
 all_class = c()
 for (i in 1:length(filenames)){
@@ -49,8 +49,8 @@ for (i in 1:length(filenames)){
 print(colnames(news_data))
 all_class = levels(factor(all_class))
 print(all_class)
-# (2)
 
+# (2)
 pre_process <- function(corpus){
 	corpus = tm_map(corpus, stripWhitespace) # 消除空格
 	corpus = tm_map(corpus, removePunctuation) # 去除标点符号
@@ -90,8 +90,7 @@ article_count = sapply(corpus, function(x) return( length( str_split(x$content, 
 
 width = cut(article_count, 10)
 
-cut_depth = function(x, n)
-{
+cut_depth = function(x, n){
   cut(rank(x)/length(x)*n,breaks = 0:n)
 }
 depth = cut_depth(article_count, 10)
@@ -116,8 +115,7 @@ dev.off()
 
 
 # (8)
-for (i in 1:9)
-{
+for (i in 1:9){
   news_data$publication_month[news_data$publication_month == as.character(i)] = paste("0", as.character(i), sep = "")
 }
 png(filename = "month_count.png", width = 1000,height = 900)
