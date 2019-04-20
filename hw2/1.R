@@ -9,6 +9,7 @@ library('ggplot2')
 dir_path = '../../HW2/nyt_corpus/samples_500/'
 filenames = list.files(path = dir_path)
 
+# (1)
 news_data = data.frame()
 for (i in 1:length(filenames)){
 	filename = filenames[i]
@@ -44,7 +45,7 @@ for (i in 1:length(filenames)){
 }
 
 
-# finish the first step
+# (2)
 
 pre_process <- function(corpus){
 	corpus = tm_map(corpus, stripWhitespace) # 消除空格
@@ -60,29 +61,26 @@ corpus = VCorpus(VectorSource(news_data$full_text))
 corpus = pre_process(corpus)
 
 
-# finish the second step
+# (3)
 bag_of_words = DocumentTermMatrix(corpus)
 
 bag_of_words = as.matrix(bag_of_words)
 # print(bag_of_words[1:3, 100:120])
 
-# finish the third step
+# (4)
 word_count = sort(colSums(bag_of_words), decreasing = TRUE)
 most_100 = word_count[1:100]
-words = names(most_100)	
-wordcloud(words, most_100, colors = brewer.pal(8, "Dark2"))
+wordcloud(names(most_100), most_100, colors = brewer.pal(8, "Dark2"))
 
 
-# finish the fourth step
-# leng = list()
-# for (c in words){
-# 	leng[length(leng) + 1] = nchar(c)
-# }
 png(filename = "p.png", width = 1200,height = 900)
-leng = sapply(words, nchar)
+leng = sapply(names(word_count), nchar)
 leng_frame = data.frame(lll = leng)
 ggplot(leng_frame, aes(lll)) + geom_bar()
 
 dev.off()
+
+# (5)
+article_count = sort(rowSums(bag_of_words), decreasing = TRUE)
 
 
